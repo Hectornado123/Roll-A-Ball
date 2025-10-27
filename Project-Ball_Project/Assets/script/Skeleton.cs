@@ -10,7 +10,7 @@ public class Skeleton : MonoBehaviour
     public Animator ani;
     public Quaternion angulo;
     public float grado;
-
+    public bool walk = false;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -31,7 +31,7 @@ public class Skeleton : MonoBehaviour
         switch (rutina)
         {
             case 0:
-               ani.SetBool("walk", false);
+               ani.SetBool("Walk", false);
                 break;
 
             case 1:
@@ -42,6 +42,7 @@ public class Skeleton : MonoBehaviour
             case 2:
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, angulo, 0.5f);
                 transform.Translate(Vector3.forward * 1 * Time.deltaTime);
+                ani.SetBool("Walk", true);
 
                 break;
         }
