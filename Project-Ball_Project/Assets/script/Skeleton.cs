@@ -10,7 +10,7 @@ public class Skeleton : MonoBehaviour
     public Animator ani;
     public Quaternion angulo;
     public float grado;
-
+    public bool walk = false;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
