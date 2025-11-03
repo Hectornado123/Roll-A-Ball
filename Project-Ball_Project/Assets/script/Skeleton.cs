@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Skeleton : MonoBehaviour
@@ -12,14 +13,23 @@ public class Skeleton : MonoBehaviour
     public float grado;
     public bool walk = false;
 
+    public GameObject target;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         ani = GetComponent<Animator>();
+        target = GameObject.Find("Player");
     }
 
+
+  
     public void Comportamiento_Enemigo()
     {
+
+        if(Vector3.Distance(transform.position, target.transform.position) > 5) {
+
+            ani.SetBool("run", false);
         cronometro += 1 * Time.deltaTime;
 
         if (cronometro >=4)
@@ -31,7 +41,7 @@ public class Skeleton : MonoBehaviour
         switch (rutina)
         {
             case 0:
-               ani.SetBool("Walk", false);
+               ani.SetBool("walk", false);
                 break;
 
             case 1:
@@ -42,12 +52,25 @@ public class Skeleton : MonoBehaviour
             case 2:
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, angulo, 0.5f);
                 transform.Translate(Vector3.forward * 1 * Time.deltaTime);
-                ani.SetBool("Walk", true);
+                ani.SetBool("walk", true);
 
                 break;
         }
 
 
+    }
+        else
+        {
+            var lookPos = target.transform.position - transform.position;
+            lookPos.y = 0;
+            var rotation = Quaternion.LookRotation(lookPos);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, rotation, 2);
+            ani.SetBool("walk", false);
+
+            ani.SetBool("run", true);
+            transform.Translate(Vector3.forward * 2 * Time.deltaTime);
+
+        }
     }
     // Update is called once per frame
     void Update()
