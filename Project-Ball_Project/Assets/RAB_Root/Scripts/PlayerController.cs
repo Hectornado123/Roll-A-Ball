@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
@@ -9,7 +9,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Movement Parameters")]
     public float speed = 10;
-    public Vector2 moveInput; //Almacén del input de movimiento de los periféricos que usamos para jugar
+    public Vector2 moveInput; //AlmacÃ©n del input de movimiento de los perifÃ©ricos que usamos para jugar
 
     [Header("Jump Parameters")]
     public float jumpForce = 6;
@@ -22,53 +22,69 @@ public class PlayerController : MonoBehaviour
     [Header("Sound Configuration")]
     public AudioClip[] soundCollection;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [Header("Shield System")]
+    public bool tieneEscudo = false;          // si el jugador tiene escudo
+    public GameObject escudoVisual;           // referencia al objeto visual del escudo
+    public AudioClip shieldSound;             // sonido opcional al activar o romper el escudo
+
     void Start()
     {
-        
+        if (escudoVisual != null)
+            escudoVisual.SetActive(false);
     }
 
-    // Update is called once per frame
     void Update()
     {
-        //CinematicMovement();
         //Respawn por altura
         if (transform.position.y <= fallLimit)
         {
             Respawn();
         }
+
+        // Mostrar u ocultar el escudo visual
+        if (escudoVisual != null)
+            escudoVisual.SetActive(tieneEscudo);
     }
 
     private void FixedUpdate()
     {
-        //Update para calcular movimientos físicos
         PhysicalMovement();
     }
 
     private void OnCollisionEnter(Collision collision)
     {
+        // Detectar si toca el suelo
         if (collision.gameObject.CompareTag("Ground"))
         {
-            isGrounded = true; //Devuelve la capacidad de saltar
+            isGrounded = true;
         }
+
+        // ColisiÃ³n con obstÃ¡culo o enemigo
         if (collision.gameObject.CompareTag("Obstacle"))
         {
-            Respawn();
+            if (tieneEscudo)
+            {
+                // El escudo bloquea el golpe y se desactiva
+                tieneEscudo = false;
+
+                if (escudoVisual != null)
+                    escudoVisual.SetActive(false);
+
+                if (shieldSound != null)
+                    playerAudio.PlayOneShot(shieldSound);
+
+                Debug.Log("Golpe bloqueado con el escudo.");
+            }
+            else
+            {
+                // Sin escudo â†’ respawn normal
+                Respawn();
+            }
         }
-    }
-
-
-    void CinematicMovement()
-    {
-        //Movimiento = (Dirección * velocidad * input)
-        //Necesitais multiplicar el movimiento por Time.deltaTime
-        transform.Translate(Vector3.right * speed * moveInput.x * Time.deltaTime);
-        transform.Translate(Vector3.forward * speed * moveInput.y * Time.deltaTime);
     }
 
     void PhysicalMovement()
     {
-        //Añadir una fuerza al rigidbody = (Dirección * velocidad * input)
         playerRb.AddForce(Vector3.right * speed * moveInput.x);
         playerRb.AddForce(Vector3.forward * speed * moveInput.y);
     }
@@ -81,10 +97,8 @@ public class PlayerController : MonoBehaviour
 
     void Respawn()
     {
-        //Sustituir el transform.position del player por el del punto de respawn
         transform.position = respawnPoint.position;
-        //Resetear el valor de aceleración del rigidbody
-        playerRb.linearVelocity = new Vector3(0,0,0);
+        playerRb.linearVelocity = Vector3.zero;
         PlaySFX(2);
     }
 
@@ -100,18 +114,16 @@ public class PlayerController : MonoBehaviour
         moveInput = context.ReadValue<Vector2>();
     }
 
-    public void OnJump(InputAction.CallbackContext context) 
+    public void OnJump(InputAction.CallbackContext context)
     {
-
-        if (context.performed && isGrounded == true)
+        if (context.performed && isGrounded)
         {
             isGrounded = false;
             Jump();
         }
     }
 
-
-
-
     #endregion
 }
+
+

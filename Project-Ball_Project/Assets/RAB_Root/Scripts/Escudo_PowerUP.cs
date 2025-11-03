@@ -4,16 +4,20 @@ public class ShieldPowerUp : MonoBehaviour
 {
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        PlayerController player = other.GetComponent<PlayerController>();
+        if (player != null)
         {
-            PlayerShield shield = other.GetComponent<PlayerShield>();
-            if (shield != null)
-            {
-                shield.ActivarEscudo();
-            }
+            player.tieneEscudo = true;
 
-            Destroy(gameObject); // destruye el power-up al recogerlo
+            if (player.escudoVisual != null)
+                player.escudoVisual.SetActive(true);
+
+            if (player.shieldSound != null)
+                player.playerAudio.PlayOneShot(player.shieldSound);
+
+            Destroy(gameObject); // El power-up desaparece
         }
     }
 }
+
 
