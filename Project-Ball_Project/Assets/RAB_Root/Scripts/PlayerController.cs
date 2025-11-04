@@ -35,6 +35,8 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        //CinematicMovement();
+
         //Respawn por altura
         if (transform.position.y <= fallLimit)
         {
@@ -88,6 +90,12 @@ public class PlayerController : MonoBehaviour
         playerRb.AddForce(Vector3.right * speed * moveInput.x);
         playerRb.AddForce(Vector3.forward * speed * moveInput.y);
     }
+
+    /*void CinematicMovement()
+    {
+        transform.Translate(Vector3.forward * moveInput.y * speed * Time.deltaTime);
+        transform.Translate(Vector3.right * moveInput.x * speed * Time.deltaTime);
+    }*/
 
     void Jump()
     {
