@@ -8,6 +8,17 @@ public class PlayerInteractor : MonoBehaviour
     public int lifePoints;
     public int maxLifePoints;
 
+
+    [Header("Editor References")]
+    public Rigidbody playerRb; //Referencia al Rigidbody del player
+    public AudioSource playerAudio; //Ref al emisor de sonidos del player
+
+    [Header("Respawn System")]
+    public float fallLimit = -10;
+    public Transform respawnPoint;
+
+
+
     [Header("Points System")]
     public int points; //Puntuación actual del player (en juego)
     public int winPoints = 1; //Puntuación a alcanzar para completar el nivel
@@ -23,6 +34,7 @@ public class PlayerInteractor : MonoBehaviour
     void Start()
     {
         points = 0;
+        maxLifePoints = 1;
         lifePoints = maxLifePoints;
     }
 
@@ -49,12 +61,26 @@ public class PlayerInteractor : MonoBehaviour
         if (other.gameObject.CompareTag("Enemy"))
         {
             lifePoints -= 1;
+            if (lifePoints <= 0)
+            {
+                Respawn();
+            }
         }
+
+
+       
     }
 
     public void LoadScene()
     {
         SceneManager.LoadScene(sceneToLoad);
+    }
+
+    void Respawn()
+    {
+        transform.position = respawnPoint.position;
+        playerRb.linearVelocity = Vector3.zero;
+     
     }
 
 }
