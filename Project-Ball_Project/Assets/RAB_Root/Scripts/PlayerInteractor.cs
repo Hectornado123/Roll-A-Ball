@@ -4,6 +4,21 @@ using UnityEngine.SceneManagement;
 
 public class PlayerInteractor : MonoBehaviour
 {
+    [Header("Life System")]
+    public int lifePoints;
+    public int maxLifePoints;
+
+
+    [Header("Editor References")]
+    public Rigidbody playerRb; //Referencia al Rigidbody del player
+    public AudioSource playerAudio; //Ref al emisor de sonidos del player
+
+    [Header("Respawn System")]
+    public float fallLimit = -10;
+    public Transform respawnPoint;
+
+
+
     [Header("Points System")]
     public int points; //Puntuación actual del player (en juego)
     public int winPoints = 1; //Puntuación a alcanzar para completar el nivel
@@ -19,6 +34,8 @@ public class PlayerInteractor : MonoBehaviour
     void Start()
     {
         points = 0;
+        maxLifePoints = 1;
+        lifePoints = maxLifePoints;
     }
 
     // Update is called once per frame
@@ -41,11 +58,29 @@ public class PlayerInteractor : MonoBehaviour
             other.gameObject.SetActive(false);
             playerCont.PlaySFX(1);
         }
+        if (other.gameObject.CompareTag("Enemy"))
+        {
+            lifePoints -= 1;
+            if (lifePoints <= 0)
+            {
+                Respawn();
+            }
+        }
+
+
+       
     }
 
     public void LoadScene()
     {
         SceneManager.LoadScene(sceneToLoad);
+    }
+
+    void Respawn()
+    {
+        transform.position = respawnPoint.position;
+        playerRb.linearVelocity = Vector3.zero;
+     
     }
 
 }
