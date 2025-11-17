@@ -1,31 +1,51 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    [Header("Editor References")]
-    public Rigidbody playerRb; //Referencia al Rigidbody del player
-    public AudioSource playerAudio; //Ref al emisor de sonidos del player
+    // ─────────────────────────────
+    // REFERENCIAS DEL EDITOR
+    // ─────────────────────────────
+    public Rigidbody playerRb;
+    public AudioSource playerAudio;
 
-    [Header("Movement Parameters")]
+    // ─────────────────────────────
+    // PARÁMETROS DE MOVIMIENTO
+    // ─────────────────────────────
     public float speed = 10;
-    public Vector2 moveInput; //Almacén del input de movimiento de los periféricos que usamos para jugar
+    public Vector2 moveInput;
 
-    [Header("Jump Parameters")]
+    // ─────────────────────────────
+    // SISTEMA DE SALTO
+    // ─────────────────────────────
     public float jumpForce = 6;
     public bool isGrounded = true;
 
-    [Header("Respawn System")]
+    // ► DOBLE SALTO
+    public bool dobleSaltoActivo = false;        // si el power-up está activo
+    private bool dobleSaltoDisponible = false;   // si puede hacer el doble salto
+
+    // ► tiempo restante del power-up
+    public float tiempoDobleSalto = 0f;
+
+    // ─────────────────────────────
+    // SISTEMA DE RESPAWN
+    // ─────────────────────────────
     public float fallLimit = -10;
     public Transform respawnPoint;
 
-    [Header("Sound Configuration")]
+    // ─────────────────────────────
+    // SONIDOS
+    // ─────────────────────────────
     public AudioClip[] soundCollection;
 
-    [Header("Shield System")]
-    public bool tieneEscudo = false;          // si el jugador tiene escudo
-    public GameObject escudoVisual;           // referencia al objeto visual del escudo
-    public AudioClip shieldSound;             // sonido opcional al activar o romper el escudo
+    // ─────────────────────────────
+    // SISTEMA DE ESCUDO
+    // ─────────────────────────────
+    public bool tieneEscudo = false;
+    public GameObject escudoVisual;
+    public AudioClip shieldSound;
+
 
     void Start()
     {
@@ -33,40 +53,53 @@ public class PlayerController : MonoBehaviour
             escudoVisual.SetActive(false);
     }
 
+
     void Update()
     {
-        //CinematicMovement();
-
-        //Respawn por altura
+        // Respawn por caída
         if (transform.position.y <= fallLimit)
-        {
             Respawn();
-        }
 
-        // Mostrar u ocultar el escudo visual
+        // Mostrar escudo visual
         if (escudoVisual != null)
             escudoVisual.SetActive(tieneEscudo);
+
+        // ─────────────────────────────
+        // CONTADOR DEL DOBLE SALTO
+        // ─────────────────────────────
+        if (dobleSaltoActivo)
+        {
+            tiempoDobleSalto -= Time.deltaTime;
+
+            if (tiempoDobleSalto <= 0)
+            {
+                dobleSaltoActivo = false;
+                dobleSaltoDisponible = false;
+            }
+        }
     }
+
 
     private void FixedUpdate()
     {
         PhysicalMovement();
     }
 
+
     private void OnCollisionEnter(Collision collision)
     {
-        // Detectar si toca el suelo
+        // ── DETECTAR SUELO ─────────────────
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = true;
+            dobleSaltoDisponible = true;
         }
 
-        // Colisión con obstáculo o enemigo
+        // ── COLISIÓN CON OBSTÁCULOS ─────────
         if (collision.gameObject.CompareTag("Obstacle"))
         {
             if (tieneEscudo)
             {
-                // El escudo bloquea el golpe y se desactiva
                 tieneEscudo = false;
 
                 if (escudoVisual != null)
@@ -74,64 +107,105 @@ public class PlayerController : MonoBehaviour
 
                 if (shieldSound != null)
                     playerAudio.PlayOneShot(shieldSound);
-
-                Debug.Log("Golpe bloqueado con el escudo.");
             }
             else
             {
-                // Sin escudo → respawn normal
                 Respawn();
             }
         }
     }
 
+
+    // ─────────────────────────────
+    // MOVIMIENTO FÍSICO
+    // ─────────────────────────────
     void PhysicalMovement()
     {
         playerRb.AddForce(Vector3.right * speed * moveInput.x);
         playerRb.AddForce(Vector3.forward * speed * moveInput.y);
     }
 
-    /*void CinematicMovement()
-    {
-        transform.Translate(Vector3.forward * moveInput.y * speed * Time.deltaTime);
-        transform.Translate(Vector3.right * moveInput.x * speed * Time.deltaTime);
-    }*/
 
+    // ─────────────────────────────
+    // SALTO
+    // ─────────────────────────────
     void Jump()
     {
         playerRb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         PlaySFX(0);
     }
 
+
+    // ─────────────────────────────
+    // RESPAWN
+    // ─────────────────────────────
     void Respawn()
     {
         transform.position = respawnPoint.position;
         playerRb.linearVelocity = Vector3.zero;
         PlaySFX(2);
+
+        isGrounded = true;
+
+        // Si el power-up sigue activo, permite doble salto
+        dobleSaltoDisponible = dobleSaltoActivo;
     }
 
+
+    // ─────────────────────────────
+    // CHECKPOINT: ACTUALIZAR RESPAWN
+    // ─────────────────────────────
+    public void UpdateRespawn(Vector3 newRespawnPos)
+    {
+        respawnPoint.position = newRespawnPos;
+    }
+
+
+    // ─────────────────────────────
+    // SONIDO
+    // ─────────────────────────────
     public void PlaySFX(int soundToPlay)
     {
         playerAudio.PlayOneShot(soundCollection[soundToPlay]);
     }
 
-    #region Input Methods
 
+    // ─────────────────────────────
+    // INPUT DEL JUGADOR
+    // ─────────────────────────────
     public void OnMove(InputAction.CallbackContext context)
     {
         moveInput = context.ReadValue<Vector2>();
     }
 
+
     public void OnJump(InputAction.CallbackContext context)
     {
-        if (context.performed && isGrounded)
+        if (!context.performed) return;
+
+        // Salto normal
+        if (isGrounded)
         {
             isGrounded = false;
+            dobleSaltoDisponible = true;
+            Jump();
+        }
+        // Doble salto
+        else if (dobleSaltoActivo && dobleSaltoDisponible)
+        {
+            dobleSaltoDisponible = false;
             Jump();
         }
     }
 
-    #endregion
+
+    // ─────────────────────────────
+    // ACTIVAR POWER-UP DE DOBLE SALTO
+    // ─────────────────────────────
+    public void ActivarDobleSalto(float duracion)
+    {
+        dobleSaltoActivo = true;
+        tiempoDobleSalto = duracion;
+        dobleSaltoDisponible = true;
+    }
 }
-
-
