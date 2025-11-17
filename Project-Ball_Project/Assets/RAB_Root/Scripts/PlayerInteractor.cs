@@ -60,8 +60,8 @@ public class PlayerInteractor : MonoBehaviour
         }
         if (other.gameObject.CompareTag("Enemy"))
         {
-            lifePoints -= 1;
-            if (lifePoints <= 0)
+            lifePoints --;
+            if (lifePoints == 0)
             {
                 Respawn();
             }
