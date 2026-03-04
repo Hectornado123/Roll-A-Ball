@@ -4,6 +4,10 @@ using UnityEngine.SceneManagement;
 
 public class PlayerInteractor : MonoBehaviour
 {
+    [Header("Life System")]
+    public int lifePoints;
+    public int maxLifePoints;
+
     [Header("Points System")]
     public int points; //Puntuación actual del player (en juego)
     public int winPoints = 1; //Puntuación a alcanzar para completar el nivel
@@ -19,6 +23,7 @@ public class PlayerInteractor : MonoBehaviour
     void Start()
     {
         points = 0;
+        lifePoints = maxLifePoints;
     }
 
     // Update is called once per frame
@@ -40,6 +45,10 @@ public class PlayerInteractor : MonoBehaviour
             //Destroy(other.gameObject);
             other.gameObject.SetActive(false);
             playerCont.PlaySFX(1);
+        }
+        if (other.gameObject.CompareTag("Enemy"))
+        {
+            lifePoints -= 1;
         }
     }
 
